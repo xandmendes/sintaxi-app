@@ -38,7 +38,7 @@ export function ListaMotoristasTab() {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <p className="font-semibold text-slate-900">{profile?.nome}</p>
-                <Badge color={motorista.ativo ? 'green' : 'gray'}>{motorista.ativo ? 'Ativo' : 'Pausado'}</Badge>
+                <Badge color={motorista.ativo ? 'green' : 'gray'}>{motorista.ativo ? 'Ativo' : 'Inativo'}</Badge>
               </div>
               <p className="text-sm text-slate-500">{profile?.telefone}</p>
               <p className="text-sm text-slate-500">
@@ -52,7 +52,7 @@ export function ListaMotoristasTab() {
             )}
           </div>
           <Button variant="secondary" className="mt-3" onClick={() => alternar(motorista.id, motorista.ativo)}>
-            {motorista.ativo ? 'Pausar' : 'Reativar'}
+            {motorista.ativo ? 'Marcar como inativo' : 'Reativar'}
           </Button>
         </Card>
       ))}
