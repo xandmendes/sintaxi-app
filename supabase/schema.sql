@@ -298,7 +298,7 @@ create policy "motoristas: admin remove" on public.motoristas
 
 -- horarios: leitura pública, o motorista dono ou o admin gerenciam
 create policy "horarios: leitura publica" on public.horarios
-  for select to authenticated using (true);
+  for select to anon, authenticated using (true);
 create policy "horarios: dono ou admin insere" on public.horarios
   for insert to authenticated with check (motorista_id = auth.uid() or public.is_admin());
 create policy "horarios: dono ou admin atualiza" on public.horarios
