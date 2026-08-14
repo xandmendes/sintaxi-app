@@ -138,7 +138,10 @@ comment on table public.horarios is 'Ex: Júnior seg-sex 5h ida / 8h volta, seg-
 create table public.reservas (
   id uuid primary key default gen_random_uuid(),
   tipo text not null check (tipo in ('viagem', 'encomenda')),
-  passageiro_id uuid not null references public.profiles(id) on delete cascade,
+  -- null quando é uma vaga marcada manualmente pelo próprio motorista (passageiro
+  -- que combinou por telefone/WhatsApp em vez de usar o app) — nesse caso
+  -- nome_manual/telefone_manual guardam quem é, já que não existe conta.
+  passageiro_id uuid references public.profiles(id) on delete cascade,
   horario_id uuid not null references public.horarios(id) on delete cascade,
   data date not null,
   direcao text not null check (direcao in ('ida', 'volta')),
@@ -152,6 +155,10 @@ create table public.reservas (
   local_entrega text,
   nome_contato text,
   telefone_contato text,
+
+  -- usado só em vagas lançadas manualmente pelo motorista (passageiro_id null)
+  nome_manual text,
+  telefone_manual text,
 
   status text not null default 'confirmada' check (status in ('confirmada', 'cancelada')),
   created_at timestamptz not null default now()
@@ -261,7 +268,8 @@ alter table public.mensagens enable row level security;
 alter table public.disponibilidades enable row level security;
 alter table public.notificacoes enable row level security;
 
--- municipios: leitura pública para autenticados
+-- municipios: leitura pública (inclusive para quem ainda não fez login, pois a
+-- tela de cadastro precisa listar os municípios antes da autenticação)
 create policy "municipios: leitura publica" on public.municipios
   for select to anon, authenticated using (true);
 
@@ -298,7 +306,7 @@ create policy "motoristas: admin remove" on public.motoristas
 
 -- horarios: leitura pública, o motorista dono ou o admin gerenciam
 create policy "horarios: leitura publica" on public.horarios
-  for select to anon, authenticated using (true);
+  for select to authenticated using (true);
 create policy "horarios: dono ou admin insere" on public.horarios
   for insert to authenticated with check (motorista_id = auth.uid() or public.is_admin());
 create policy "horarios: dono ou admin atualiza" on public.horarios
@@ -314,6 +322,13 @@ create policy "reservas: select proprio ou do motorista" on public.reservas
   );
 create policy "reservas: passageiro insere" on public.reservas
   for insert to authenticated with check (passageiro_id = auth.uid());
+-- motorista marca uma vaga como ocupada manualmente (passageiro combinou por
+-- telefone/WhatsApp) — só no próprio horário, e sempre sem passageiro_id
+create policy "reservas: motorista insere manual" on public.reservas
+  for insert to authenticated with check (
+    passageiro_id is null
+    and horario_id in (select id from public.horarios where motorista_id = auth.uid())
+  );
 create policy "reservas: passageiro cancela a propria" on public.reservas
   for update to authenticated using (
     passageiro_id = auth.uid()
