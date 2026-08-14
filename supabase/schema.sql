@@ -263,7 +263,7 @@ alter table public.notificacoes enable row level security;
 
 -- municipios: leitura pública para autenticados
 create policy "municipios: leitura publica" on public.municipios
-  for select to authenticated using (true);
+  for select to anon, authenticated using (true);
 
 -- profiles: qualquer autenticado pode ver nomes (necessário p/ exibir motorista/passageiro);
 -- cada um edita o próprio registro, e o admin pode editar qualquer um (usado para
