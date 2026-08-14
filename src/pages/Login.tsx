@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Button, Card, Input, Label } from '../components/ui'
 import { GoogleButton } from '../components/GoogleButton'
 
 export function Login() {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState<string | null>(null)
@@ -16,7 +17,11 @@ export function Login() {
     setCarregando(true)
     const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
     setCarregando(false)
-    if (error) setErro('E-mail ou senha inválidos.')
+    if (error) {
+      setErro('E-mail ou senha inválidos.')
+      return
+    }
+    navigate('/')
   }
 
   return (
